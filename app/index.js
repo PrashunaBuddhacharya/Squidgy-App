@@ -1,17 +1,37 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
 import { useFonts, Quicksand_400Regular, Quicksand_700Bold } from '@expo-google-fonts/quicksand';
 import * as SplashScreen from 'expo-splash-screen';
-import { Droplet, ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { COLORS, SIZES } from '../src/constants/theme';
 import { useRouter } from 'expo-router';
 
+const { width } = Dimensions.get('window');
+
 SplashScreen.preventAutoHideAsync();
 
-export default function Page() {
-  const router = useRouter(); // Initialize the router
+export default function WelcomePage() {
+  const router = useRouter();
+  
+  const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // Load Fonts
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -15, 
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0, 
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [floatAnim]);
+
   const [fontsLoaded] = useFonts({
     'Quicksand-Regular': Quicksand_400Regular,
     'Quicksand-Bold': Quicksand_700Bold,
@@ -27,31 +47,47 @@ export default function Page() {
 
   return (
     <SafeAreaView style={styles.container} onLayout={onLayoutRootView}>
-      {/* HEADER SECTION */}
-      <View style={styles.header}>
-        <Text style={styles.brandName}>Squidgy</Text>
-      </View>
+      
+      <View style={styles.bubble1} />
+      <View style={styles.bubble2} />
 
-      {/* MAIN CARD */}
+      <Animated.View style={[styles.logoContainer, { transform: [{ translateY: floatAnim }] }]}>
+        <Image 
+          source={require('../assets/images/logo.png')} 
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
+      </Animated.View>
+
       <View style={styles.card}>
-        <View style={styles.iconContainer}>
-          <Droplet color={COLORS.primary} size={45} fill={COLORS.primary} />
-        </View>
-        
         <Text style={styles.title}>Stay Hydrated</Text>
-        <Text style={styles.subtitle}>Track your water intake and reach your daily goals with ease.</Text>
+        <Text style={styles.subtitle}>
+          Track water intake and reach goals with ease.
+        </Text>
         
-        {/* THIS IS THE CORRECT BUTTON LOCATION */}
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => router.push('/onboarding')} // We added this line!
+          activeOpacity={0.9}
+          onPress={() => router.push('/onboarding')}
         >
           <Text style={styles.buttonText}>Get Started</Text>
-          <ArrowRight color={COLORS.textNavy} size={20} />
+          <ArrowRight color={COLORS.textNavy} size={18} />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.footer}>IoT Smart Bottle Companion</Text>
+      
+      <TouchableOpacity 
+        style={styles.loginLink} 
+        onPress={() => router.push('/login')}
+      >
+        <Text style={styles.loginText}>
+          Already have an account? <Text style={styles.loginBold}>Login</Text>
+        </Text>
+      </TouchableOpacity>
+      {/* ---------------------------------- */}
+
+      <Text style={styles.footerText}>IoT Smart Water Companion</Text>
+      
     </SafeAreaView>
   );
 }
@@ -60,50 +96,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    padding: SIZES.padding,
+    paddingHorizontal: 40, 
     alignItems: 'center',
     justifyContent: 'center',
   },
-  header: {
+  bubble1: {
     position: 'absolute',
-    top: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: COLORS.secondary + '15', 
+    top: '35%',
+    left: -20,
+    zIndex: -1,
   },
-  brandName: {
-    fontFamily: 'Quicksand-Bold',
-    fontSize: 24,
-    color: COLORS.primary,
+  bubble2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.accent + '20', 
+    top: '45%',
+    right: 10,
+    zIndex: -1,
+  },
+  logoContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: -20 
+  },
+  logoImage: {
+    width: width * 0.9, 
+    height: 400,
   },
   card: {
     backgroundColor: COLORS.primary,
-    width: '100%',
-    borderRadius: SIZES.radius,
-    padding: 35,
+    width: '90%',
+    borderRadius: 60,
+    paddingVertical: 50, 
+    paddingHorizontal: 10,
     alignItems: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  iconContainer: {
-    width: 90,
-    height: 90,
-    backgroundColor: 'white',
-    borderRadius: 45,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
+    elevation: 10,
   },
   title: {
     fontFamily: 'Quicksand-Bold',
-    fontSize: 28,
-    color: 'white',
-    marginBottom: 10,
+    fontSize: 26,
+    color: COLORS.white,
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: 'Quicksand-Regular',
-    fontSize: 16,
-    color: 'white',
+    fontSize: 15,
+    color: COLORS.white,
     textAlign: 'center',
     opacity: 0.9,
     lineHeight: 22,
@@ -113,9 +162,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent, 
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 16,
     paddingHorizontal: 30,
-    borderRadius: 20,
+    borderRadius: 22,
   },
   buttonText: {
     fontFamily: 'Quicksand-Bold',
@@ -123,11 +172,25 @@ const styles = StyleSheet.create({
     color: COLORS.textNavy,
     marginRight: 10,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
+  // STYLES FOR THE NEW LOGIN LINK
+  loginLink: {
+    marginTop: 25,
+  },
+  loginText: {
+    fontFamily: 'Quicksand-Regular',
+    color: COLORS.textNavy,
+    fontSize: 15,
+  },
+  loginBold: {
+    fontFamily: 'Quicksand-Bold',
+    color: COLORS.primary,
+  },
+  // -------------------------
+  footerText: {
     fontFamily: 'Quicksand-Regular',
     color: COLORS.textGrey,
-    fontSize: 14,
+    fontSize: 12,
+    position: 'absolute',
+    bottom: 40,
   }
 });
